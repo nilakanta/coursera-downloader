@@ -6,12 +6,23 @@ class SettingsController
 
   tasksMap: {}
   tasks: []
+  fileExtensions:
+    video: '.mp4'
+    slides: '.pdf'
+    txtSubtitles: '.txt'
+    srtSubtitles: '.srt'
 
   constructor: ($scope, @store, @classesService, @timeout) ->
     @incomingTasks = @store.incomingTasks()
     @scope = $scope
     $scope.filePattern = '#{course} #{sectionIndex}.#{lectureIndex} #{lecture}'
     $scope.incomings = @incomingTasks
+    $scope.inclusionTypes = 
+      video: true
+      slides: false
+      txtSubtitles: false
+      srtSubtitles: false
+
     $scope.filename = (section, lecture, sectionIndex, lectureIndex) =>
       @filename section, lecture, sectionIndex, lectureIndex
 
@@ -42,10 +53,12 @@ class SettingsController
   download: ->
     @tasksMap = {}
     @tasks = []
+    
     for section, sectionIndex in @incomingTasks.sections
       for lecture, lectureIndex in section.lectures
-        @tasks.push @getTask(section, lecture, sectionIndex, lectureIndex) if lecture.selected
-
+        if lecture.selected
+          for inclusionType, isIncluded of @scope.inclusionTypes
+            @tasks.push @getTask(section, lecture, sectionIndex, lectureIndex, inclusionType) if isIncluded && lecture[inclusionType]
     @clearIncoming()
     @scope.tasks = @tasks
 
@@ -59,16 +72,17 @@ class SettingsController
       , 100
 
   prepareTask: (task) ->
-    task.video = @getVideoLink task.video
+    task.downloadItem = @getVideoLink(task.downloadItem) if task.type is 'video'
     task.state = 'time'
     @downloadTask task
 
-  getTask: (section, lecture, sectionIndex, lectureIndex) ->
-    filename: @filename section, lecture, sectionIndex, lectureIndex
-    video: lecture.video
+  getTask: (section, lecture, sectionIndex, lectureIndex, type) ->
+    filename: @filename(section, lecture, sectionIndex, lectureIndex, type), downloadItem: lecture[type], type: type
 
-  filename: (section, lecture, sectionIndex, lectureIndex) ->
-    name = @scope.filePattern + '.mp4'
+  filename: (section, lecture, sectionIndex, lectureIndex, type) ->
+    if type is 'slides'
+      extension = lecture[type].subscript(lecture[type].lastIndexOf('.'))
+    name = @scope.filePattern + (extension || @fileExtensions[type] || '')
     name.interpolate
       course: @scope.incomings.course,
       section: section.title,
@@ -109,12 +123,12 @@ class SettingsController
 
   downloadTask: (task) ->
     name = task.filename
-    if @scope.subdirectory.length
+    if @scope.subdirectory && @scope.subdirectory.length
       name = @scope.subdirectory + "/" + name.clear()
     else
       name = name.clear()
 
-    params = {url: task.video, filename: name}
+    params = {url: task.downloadItem, filename: name}
     console.log params
     chrome.downloads.download params, (id) =>
       @tasksMap[id] = task

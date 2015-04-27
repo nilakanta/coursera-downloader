@@ -107,7 +107,7 @@
     </div>
     <div class="modal-body">
         <p>
-            Video filename pattern:<br/>
+            Filename pattern:<br/>
             <label>
                 <input type="text" ng-model="filePattern" class="span5"/>
             </label>
@@ -119,7 +119,35 @@
                 <input type="text" ng-model="subdirectory" class="span5"/>
             </label>
         </p>
-
+        <p>
+          Include (optional):<br />
+          <ul class="unstyled inline">
+            <li>
+              <label>
+                <input type="checkbox" ng-model="inclusionTypes.video"/>
+                Video
+              </label>
+            </li>
+            <li>
+              <label>
+                <input type="checkbox" ng-model="inclusionTypes.slides"/>
+                Slides
+              </label>
+            </li>
+            <li>
+              <label>
+                <input type="checkbox" ng-model="inclusionTypes.txtSubtitles"/>
+                Subtitles (txt)
+              </label>
+            </li>
+            <li>  
+              <label>
+                <input type="checkbox" ng-model="inclusionTypes.srtSubtitles"/>
+                Subtitles (srt)
+              </label>
+            </li>
+          </ul>
+        </p>
         <ul class="unstyled">
             <li ng-repeat="(sectionIndex, section) in incomings.sections">
                 <span><b>{{section.title}}</b></span>

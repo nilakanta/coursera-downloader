@@ -5,10 +5,20 @@ trim = (str) ->
 getVideo = (link) ->
   $(link).attr('data-modal-iframe')
 
+getLectureItem = (lectureItemResources, type) ->
+  $(lectureItemResources).find("a[title='#{type}']").attr('href')
+
 getLectures = (section) ->
   $(section).next().find('li').map(->
     link = $(this).find('.lecture-link')
-    title: trim($(link).text()), video: getVideo(link)
+    lectureItemResources = $(this).find('.course-lecture-item-resource')
+    {
+      title: trim($(link).text())
+      video: getVideo(link)
+      slides: getLectureItem(lectureItemResources, "Slides")
+      txtSubtitles: getLectureItem(lectureItemResources, "Subtitles (text)")
+      srtSubtitles: getLectureItem(lectureItemResources, "Subtitles (srt)")
+    }
   ).get()
 
 
